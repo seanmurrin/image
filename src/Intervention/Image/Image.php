@@ -2,6 +2,7 @@
 
 namespace Intervention\Image;
 
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Exception\NotWritableException;
 use Intervention\Image\Exception\RuntimeException;
 use Psr\Http\Message\ResponseInterface;
@@ -129,7 +130,7 @@ class Image extends File
      * @param  string  $format
      * @return \Intervention\Image\Image
      */
-    public function save($path = null, $quality = null, $format = null)
+    public function save($disk = 'public', $path = null, $quality = null, $format = null)
     {
         $path = is_null($path) ? $this->basePath() : $path;
 
@@ -144,7 +145,9 @@ class Image extends File
         }
 
         $data = $this->encode($format, $quality);
-        $saved = @file_put_contents($path, $data);
+        // $saved = @file_put_contents($path, $data);
+
+        $saved = Storage::disk($disk)->put($path, $data);
 
         if ($saved === false) {
             throw new NotWritableException(
@@ -222,7 +225,7 @@ class Image extends File
     {
         $name = is_null($name) ? 'default' : $name;
 
-        if ( ! $this->backupExists($name)) {
+        if (!$this->backupExists($name)) {
             throw new RuntimeException(
                 "Backup with name ({$name}) not available. Call backup() before reset()."
             );
@@ -275,7 +278,7 @@ class Image extends File
      */
     public function isEncoded()
     {
-        return ! empty($this->encoded);
+        return !empty($this->encoded);
     }
 
     /**
